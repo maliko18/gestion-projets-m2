@@ -1,0 +1,153 @@
+{% extends "layout.html" %} {% block title %}Ajouter une Affectation{% endblock
+%} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h4 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-plus-circle me-2"></i>Nouvelle Affectation Projet
+        </h4>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('nouvelle_affectation') }}">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nom du Projet *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="nomProj"
+                placeholder="ex: ILO"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Manager du Projet *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="mgrProj"
+                placeholder="ex: Dupont"
+                required
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">ID Employé *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="idEmp"
+                placeholder="ex: E101"
+                required
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Nom Employé *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="nomEmp"
+                placeholder="ex: Durand"
+                required
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Heures / Semaine *</label>
+              <input
+                type="number"
+                class="form-control"
+                name="heures"
+                min="1"
+                max="100"
+                placeholder="ex: 25"
+                required
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Budget Projet (€) *</label>
+              <input
+                type="number"
+                step="0.01"
+                class="form-control"
+                name="budget"
+                placeholder="ex: 100000"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Date de Début *</label>
+              <input
+                type="date"
+                class="form-control"
+                name="dateDebut"
+                required
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Salaire Annuel (€) *</label>
+              <input
+                type="number"
+                step="0.01"
+                class="form-control"
+                name="salEmp"
+                placeholder="ex: 45000"
+                required
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold"
+                >Manager Hiérarchique *</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                name="mgrEmp"
+                placeholder="ex: Holmes"
+                required
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Département *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="deptEmp"
+                placeholder="ex: 10"
+                required
+              />
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-semibold"
+                >Évaluation (0 à 10 - Optionnelle)</label
+              >
+              <input
+                type="number"
+                min="0"
+                max="10"
+                class="form-control"
+                name="evalEmp"
+                placeholder="ex: 9 (laisser vide si non évalué)"
+              />
+            </div>
+          </div>
+
+          <div class="mt-4 text-end">
+            <a
+              href="{{ url_for('index') }}"
+              class="btn btn-outline-secondary me-2"
+              >Annuler</a
+            >
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i>Enregistrer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

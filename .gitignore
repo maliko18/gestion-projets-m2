@@ -1,0 +1,14 @@
+# .gitignore
+.env
+*.db
+__pycache__/
+*.pyc
+.venv/
+venv/
+.idea/
+.vscode/
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz

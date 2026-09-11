@@ -1,0 +1,130 @@
+{% extends "layout.html" %} {% block title %}Projet {{ projet.nomProj }} -
+Détails{% endblock %} {% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Retour au tableau de bord
+  </a>
+</div>
+
+<!-- Header de la fiche Projet -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+  <div class="card-body p-4">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <span class="badge bg-primary text-uppercase px-3 py-2 mb-2"
+          >Code Projet</span
+        >
+        <h1 class="display-6 fw-bold text-dark mb-2">
+          Projet {{ projet.nomProj }}
+        </h1>
+        <p class="text-muted mb-0">
+          <i class="bi bi-person-badge-fill me-1 text-primary"></i> Manager du
+          projet : <strong>{{ projet.mgrProj }}</strong>
+        </p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="p-3 bg-light rounded border text-center">
+          <small class="text-muted text-uppercase d-block fw-semibold"
+            >Budget du Projet</small
+          >
+          <span class="fs-3 fw-bold text-success"
+            >{{ "{:,.2f}".format(projet.budget) }} €</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Détails des Métriques et Équipe -->
+<div class="row g-4 mb-4">
+  <!-- Statistique 1 -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm text-center p-3">
+      <i class="bi bi-calendar-check fs-1 text-primary mb-2"></i>
+      <h6 class="text-muted mb-1">Date de début</h6>
+      <p class="fs-5 fw-bold mb-0">{{ projet.dateDebut }}</p>
+    </div>
+  </div>
+  <!-- Statistique 2 -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm text-center p-3">
+      <i class="bi bi-people-fill fs-1 text-info mb-2"></i>
+      <h6 class="text-muted mb-1">Membres affectés</h6>
+      <p class="fs-5 fw-bold mb-0">{{ affectations|length }} employé(s)</p>
+    </div>
+  </div>
+  <!-- Statistique 3 -->
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm text-center p-3">
+      <i class="bi bi-clock-history fs-1 text-warning mb-2"></i>
+      <h6 class="text-muted mb-1">Charge hebdomadaire</h6>
+      <p class="fs-5 fw-bold mb-0">{{ total_heures }} h / semaine</p>
+    </div>
+  </div>
+</div>
+
+<!-- Table des Employés sur ce projet -->
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-3">
+    <h5 class="mb-0 fw-bold text-secondary">
+      <i class="bi bi-person-workspace me-2"></i>Équipe projet et évaluation
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Nom Employé</th>
+            <th>Heures/semaine</th>
+            <th>Salaire Annuel (€)</th>
+            <th>Département</th>
+            <th>Manager Hiérarchique</th>
+            <th>Évaluation Projet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in affectations %}
+          <tr>
+            <td><span class="badge bg-secondary">{{ emp.idEmp }}</span></td>
+            <td class="fw-bold text-dark">{{ emp.nomEmp }}</td>
+            <td>
+              <span class="badge bg-primary rounded-pill"
+                >{{ emp.heures }} h</span
+              >
+            </td>
+            <td>{{ "{:,.2f}".format(emp.salEmp) }} €</td>
+            <td>
+              <span class="badge bg-light text-dark border"
+                >{{ emp.deptEmp }}</span
+              >
+            </td>
+            <td>{{ emp.mgrEmp }}</td>
+            <td>
+              {% if emp.evalEmp is not none and emp.evalEmp != '' %}
+              <div class="progress" style="height: 20px; width: 120px">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: {{ emp.evalEmp * 10 }}%;"
+                  aria-valuenow="{{ emp.evalEmp }}"
+                  aria-valuemin="0"
+                  aria-valuemax="10"
+                >
+                  {{ emp.evalEmp }}/10
+                </div>
+              </div>
+              {% else %}
+              <span class="badge bg-light text-muted border">Non évalué</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
