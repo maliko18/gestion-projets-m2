@@ -104,9 +104,9 @@ Ce compte rendu détaille le rapport d'analyse généré par Sonar, classe les a
 % --------------------------------------------------
 L'intégration de l'application s'est déroulée en trois étapes principales :
 \begin{enumerate}
-    \item **Création du dépôt Git & GitHub :** Publication du code source nettoyé sur GitHub ;
-    \item **Fichier de configuration Sonar :** Ajout du fichier \texttt{sonar-project.properties} à la racine du projet pour spécifier les paramètres d'analyse (version Python, exclusions) ;
-    \item **Analyse automatique :** Exécution du scanner SonarCloud sur l'ensemble du projet.
+    \item \textbf{Création du dépôt Git \& GitHub :} Publication du code source nettoyé sur GitHub ;
+    \item \textbf{Fichier de configuration Sonar :} Ajout du fichier \texttt{sonar-project.properties} à la racine du projet pour spécifier les paramètres d'analyse (version Python, exclusions) ;
+    \item \textbf{Analyse automatique :} Exécution du scanner SonarCloud sur l'ensemble du projet.
 \end{enumerate}
 
 % --------------------------------------------------
@@ -179,7 +179,7 @@ Conventions Python & Faible (Low) & \texttt{app.py} & Nommage de variables local
 \textbf{Explication :} Par défaut, \texttt{@app.route('/')} accepte uniquement la méthode GET, mais il est recommandé de spécifier explicitement \texttt{methods=["GET"]} pour améliorer la lisibilité du code.
 
 \subsubsection{2. Conventions de nommage Python (snake\_case vs camelCase)}
-\textbf{Alerte Sonar :} \texttt{Rename this local variable "nomProj" to match the regular expression \string^[\_a-z][a-z0-9\_]*\$. (app.py)}\\
+\textbf{Alerte Sonar :} \texttt{Rename this local variable "nomProj" to match the regular expression \^{}[\_a-z][a-z0-9\_]*\$. (app.py)}\\
 \textbf{Explication :} En Python (norme PEP 8), les variables locales doivent être nommées en \texttt{snake\_case} (\texttt{nom\_proj}) et non en \texttt{camelCase} (\texttt{nomProj}).
 
 % --------------------------------------------------
@@ -303,7 +303,7 @@ eval_emp = int(eval_emp_raw) if eval_emp_raw else None
 % --------------------------------------------------
 \section{Analyse Complémentaire par l'Intelligence Artificielle (Gemini 3.6 Flash)}
 % --------------------------------------------------
-En complément de l'analyse statique automatisée effectuée par SonarCloud, une révision de code approfondie a été réalisée par l'Agent d’Intelligence Artificielle **Gemini 3.6 Flash** (GitHub Copilot).
+En complément de l'analyse statique automatisée effectuée par SonarCloud, une révision de code approfondie a été réalisée par l'Agent d'Intelligence Artificielle \textbf{Gemini 3.6 Flash} (GitHub Copilot).
 
 L'objectif de cette double approche est de comparer l'analyse SAST traditionnelle basée sur des règles déterministes (Sonar) avec une analyse sémantique guidée par un modèle de langage (IA LLM).
 
@@ -312,7 +312,7 @@ L'objectif de cette double approche est de comparer l'analyse SAST traditionnell
 Alors que SonarCloud se concentre principalement sur les erreurs de syntaxe, d'accessibilité et de configuration, l'analyse par l'IA Gemini a permis de révéler des risques d'architecture, de logique métier et de sécurité des données plus subtils :
 
 \subsubsection{1. Absence de Gestion Transactionnelle lors des Opérations Multi-Requêtes}
-\textbf{Analyse Gemini :} Dans \texttt{init_db.py} et \texttt{app.py}, en cas d'échec lors d'une insertion intermédiaire ou d'une erreur d'unicité (\texttt{UNIQUE constraint failed}), l'absence de bloc d'exception avec \texttt{conn.rollback()} explicite peut laisser la base de données SQLite ou PostgreSQL dans un état incohérent ou verrouillé.
+\textbf{Analyse Gemini :} Dans \texttt{init\_db.py} et \texttt{app.py}, en cas d'échec lors d'une insertion intermédiaire ou d'une erreur d'unicité (\texttt{UNIQUE constraint failed}), l'absence de bloc d'exception avec \texttt{conn.rollback()} explicite peut laisser la base de données SQLite ou PostgreSQL dans un état incohérent ou verrouillé.
 
 \textbf{Correction proposée par l'IA :}
 \begin{lstlisting}[language=Python, caption=Gestion robuste des transactions avec try/except/rollback]
@@ -357,11 +357,11 @@ search_term = f"%{escape_like(query_search)}%"
 \begin{tabular}{|p{3.5cm}|p{5.5cm}|p{5.5cm}|}
 \hline
 \textbf{Critère} & \textbf{SonarCloud (SAST Traditionnel)} & \textbf{Intelligence Artificielle (Gemini)} \\ \hline
-\textbf{Analyse de la syntaxe & style} & Excellent (Règles d'accessibilité WCAG, nommage PEP 8). & Bon (Rappels de conventions). \\ \hline
+\textbf{Analyse de la syntaxe \& style} & Excellent (Règles d'accessibilité WCAG, nommage PEP 8). & Bon (Rappels de conventions). \\ \hline
 \textbf{Détection des failles connues} & Très rapide sur les motifs fixes (CSRF, mots de passe en dur). & Identifie les failles logiques métier et de contexte. \\ \hline
-\textbf{Logique métier & RGPD} & Limité (Ne comprend pas la sensibilité des salaires). & **Excellent** (Comprend la confidentialité RH et l'exposition des données). \\ \hline
-\textbf{Gestion d'erreurs & Transactions} & Signale le mode debug. & **Détecte les fuites mémoire et l'absence de rollback**. \\ \hline
-\textbf{Procuration de solutions} & Liens vers la documentation générique. & **Génère directement le code refactorisé prêt à l'emploi**. \\ \hline
+\textbf{Logique métier \& RGPD} & Limité (Ne comprend pas la sensibilité des salaires). & \textbf{Excellent} (Comprend la confidentialité RH et l'exposition des données). \\ \hline
+\textbf{Gestion d'erreurs \& Transactions} & Signale le mode debug. & \textbf{Détecte les fuites mémoire et l'absence de rollback}. \\ \hline
+\textbf{Procuration de solutions} & Liens vers la documentation générique. & \textbf{Génère directement le code refactorisé prêt à l'emploi}. \\ \hline
 \end{tabular}
 \end{table}
 
