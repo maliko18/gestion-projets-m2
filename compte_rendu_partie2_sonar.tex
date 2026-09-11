@@ -1,0 +1,202 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Packages de base ---
+\usepackage[utf8]{utf8}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{hmargin=2.5cm,vmargin=2.5cm}
+
+% --- Graphiques et Tableaux ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+
+% --- Liens et Code ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Compte Rendu Partie 2 - Analyse SonarQube / SonarCloud}
+}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% --- Configuration de Listings ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+% --- Page de Garde ---
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    {\Large \textbf{UNIVERSITÉ DE HAUTE-ALSACE}}\\[0.3cm]
+    {\large Master IM (Informatique et Mobilité)}\\[0.2cm]
+    {\large Année Universitaire 2026 -- 2027}\\[2.5cm]
+    
+    \rule{\linewidth}{0.5mm}\\[0.5cm]
+    {\huge \bfseries COMPTE RENDU DE TP -- PARTIE 2}\\[0.3cm]
+    {\Large \textbf{Analyse Statique du Code avec SonarCloud / SonarQube}}\\[0.5cm]
+    \rule{\linewidth}{0.5mm}\\[3cm]
+    
+    \begin{minipage}{0.45\textwidth}
+        \begin{flushleft} \large
+            \textbf{Réalisé par :}\\
+            Nourine Abdelmalek\\
+            \textit{Étudiant M2 IM}
+        \end{flushleft}
+    \end{minipage}
+    ~
+    \begin{minipage}{0.45\textwidth}
+        \begin{flushright} \large
+            \textbf{Encadré par :}\\
+            Prof. Hammoudi Karim\\
+            \textit{Enseignant-chercheur}
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    
+    {\large \today}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage
+
+% --------------------------------------------------
+\section{Introduction}
+% --------------------------------------------------
+La seconde partie de ce TP s'inscrit dans une démarche d'assurance qualité et d'analyse statique de sécurité (SAST - \textit{Static Application Security Testing}). 
+
+Après avoir développé l'application web Flask de gestion de projets et étudié l'injection SQL, nous avons intégré le projet à la plateforme **SonarCloud** (SonarQube) afin d'identifier les vulnérabilités de sécurité, les risques de sécurité (Security Hotspots), les failles d'accessibilité web (WCAG/a11y) et les problèmes de maintenabilité (Code Smells).
+
+Ce compte rendu détaille le rapport d'analyse généré par Sonar, classe les anomalies détectées et propose les corrections appropriées pour chaque problème identifié.
+
+% --------------------------------------------------
+\section{Intégration de l'application à SonarCloud}
+% --------------------------------------------------
+L'intégration de l'application s'est déroulée en trois étapes principales :
+\begin{enumerate}
+    \item **Création du dépôt Git & GitHub :** Publication du code source nettoyé sur GitHub ;
+    \item **Fichier de configuration Sonar :** Ajout du fichier \texttt{sonar-project.properties} à la racine du projet pour spécifier les paramètres d'analyse (version Python, exclusions) ;
+    \item **Analyse automatique :** Exécution du scanner SonarCloud sur l'ensemble du projet.
+\end{enumerate}
+
+% --------------------------------------------------
+\section{Synthèse globale des résultats Sonar}
+% --------------------------------------------------
+L'analyse statique menée par SonarCloud a révélé plusieurs catégories d'alertes réparties entre la sécurité, l'accessibilité web et les conventions de nommage :
+
+\begin{table}[htbp]
+\centering
+\caption{Synthèse des alertes relevées par SonarCloud}
+\vspace{0.2cm}
+\small
+\begin{tabular}{|l|c|c|p{6cm}|}
+\hline
+\textbf{Catégorie} & \textbf{Sévérité} & \textbf{Fichier(s)} & \textbf{Type de Problème} \\ \hline
+Sécurité & Élevée (High) & \texttt{app.py} / \texttt{database.py} & Hotspot CSRF, Mot de passe en dur. \\ \hline
+Sécurité / Config & Faible (Low) & \texttt{app.py} & Mode Debug Flask activé en production. \\ \hline
+Sécurité CDN & Faible (Low) & \texttt{templates/layout.html} & Absence des attributs \texttt{integrity} et \texttt{crossorigin} (Subresource Integrity). \\ \hline
+Accessibilité (a11y) & Moyenne (Medium) & \texttt{templates/nouveau.html} & Absences d'attributs \texttt{id} et de liaisons \texttt{for} sur les labels de formulaire (WCAG 2.0). \\ \hline
+Maintenabilité & Moyenne & \texttt{app.py} & Non-spécification des méthodes HTTP sur les routes Flask. \\ \hline
+Conventions Python & Faible (Low) & \texttt{app.py} & Nommage de variables locales en camelCase (\texttt{nomProj}) au lieu de snake\_case. \\ \hline
+\end{tabular}
+\end{table}
+
+% --------------------------------------------------
+\section{Analyse détaillée et corrections proposées}
+% --------------------------------------------------
+
+\subsection{Problèmes de Sécurité (Security & Hotspots)}
+
+\subsubsection{1. Risque CSRF (Cross-Site Request Forgery)}
+\textbf{Alerte Sonar :} \texttt{Make sure disabling CSRF protection is safe here. (Security - High)}\\
+\textbf{Explication :} L'application traite des requêtes HTTP POST sans utiliser de token anti-CSRF (comme \texttt{Flask-WTF}). Un attaquant pourrait forcer un utilisateur authentifié à soumettre des formulaires malveillants à son insu.\\
+\textbf{Correction :} Intégrer la protection CSRF globale avec l'extension \texttt{Flask-WTF} ou inclure un token CSRF dans les formulaires POST.
+
+\subsubsection{2. Mot de passe en dur (Hardcoded Credentials)}
+\textbf{Alerte Sonar :} \texttt{"password" detected here, review this potentially hard-coded credential. (database.py)}\\
+\textbf{Explication :} Une valeur de repli par défaut pour le mot de passe de la base de données est directement écrite dans le code Python.\\
+\textbf{Correction :} Supprimer la valeur par défaut en dur et forcer la lecture exclusive via les variables d'environnement (\texttt{os.getenv}).
+
+\subsubsection{3. Mode Debug activé}
+\textbf{Alerte Sonar :} \texttt{Make sure this debug feature is deactivated before delivering the code in production. (app.py)}\\
+\textbf{Explication :} \texttt{app.run(debug=True)} expose le debugger interactif Werkzeug, permettant l'exécution arbitraire de code en cas d'erreur uncaught.\\
+\textbf{Correction :} Dépenser le paramètre `debug` d'une variable d'environnement \texttt{FLASK_DEBUG=False} en production.
+
+\subsubsection{4. Subresource Integrity (SRI) manquant sur les CDN}
+\textbf{Alerte Sonar :} \texttt{Add integrity and crossorigin="anonymous" attributes to this element. (templates/layout.html)}\\
+\textbf{Explication :} L'inclusion des scripts et styles Bootstrap externes depuis un CDN sans attribut \texttt{integrity} présente un risque de sécurité si le CDN est compromis.\\
+\textbf{Correction :} Ajouter les empreintes de hachage (hashes SHA-384) sur les balises \texttt{<link>} et \texttt{<script>}.
+
+\subsection{Problèmes d'Accessibilité Web (WCAG 2.0 / a11y)}
+
+\textbf{Alerte Sonar :} \texttt{Add an "id" attribute to this input field and associate it with a label. (nouveau.html)}\\
+\textbf{Explication :} Dans le formulaire de création d'affectation, les balises \texttt{<label>} ne possèdent pas d'attribut \texttt{for="..."} pointant vers l'attribut \texttt{id="..."} du champ de saisie correspondant. Cela pénalise les lecteurs d'écran pour les personnes malvoyantes.\\
+\textbf{Correction :} Associer explicitement chaque label au champ correspondant :
+\begin{lstlisting}[language=HTML, caption=Correction de l'accessibilité dans le formulaire]
+<!-- Avant -->
+<label class="form-label">Nom du Projet</label>
+<input type="text" class="form-control" name="nomProj">
+
+<!-- Après (Conforme WCAG) -->
+<label for="nomProj" class="form-label">Nom du Projet</label>
+<input type="text" id="nomProj" class="form-control" name="nomProj">
+\end{lstlisting}
+
+\subsection{Problèmes de Maintenabilité et Conventions (Code Smells)}
+
+\subsubsection{1. Méthodes HTTP non spécifiées sur les routes}
+\textbf{Alerte Sonar :} \texttt{Specify the HTTP methods this route should accept. (app.py)}\\
+\textbf{Explication :} Par défaut, \texttt{@app.route('/')} accepte uniquement la méthode GET, mais il est recommandé de spécifier explicitement \texttt{methods=["GET"]} pour améliorer la lisibilité du code.
+
+\subsubsection{2. Conventions de nommage Python (snake\_case vs camelCase)}
+\textbf{Alerte Sonar :} \texttt{Rename this local variable "nomProj" to match the regular expression \string^[\_a-z][a-z0-9\_]*\$. (app.py)}\\
+\textbf{Explication :} En Python (norme PEP 8), les variables locales doivent être nommées en \texttt{snake\_case} (\texttt{nom\_proj}) et non en \texttt{camelCase} (\texttt{nomProj}).
+
+% --------------------------------------------------
+\section{Synthèse des Recommandations}
+% --------------------------------------------------
+À la suite de cette analyse statique par SonarCloud, les actions prioritaires de refactorisation sont les suivantes :
+\begin{enumerate}
+    \item **Priorité Haute (Sécurité) :** Mettre en place un jeton de protection CSRF sur la route d'ajout d'affectation POST.
+    \item **Priorité Moyenne (Accessibilité) :** Ajouter les identifiants \texttt{id} et liaisons \texttt{for} sur tous les éléments de formulaire de \texttt{nouveau.html}.
+    \item **Priorité Moyenne (Bonnes Pratiques) :** Remplacer le nommage des variables \texttt{camelCase} par la convention \texttt{snake\_case} conformément au guide PEP 8.
+\end{enumerate}
+
+% --------------------------------------------------
+\section{Conclusion}
+% --------------------------------------------------
+L'intégration de SonarCloud a permis d'évaluer la qualité du code sous plusieurs angles complémentaires à la sécurité brute. Si la première partie du TP s'est focalisée sur la détection et la prévention des injections SQL, cette deuxième partie met en évidence l'importance d'une analyse automatisée continue (SAST).
+
+Les retours fournis par SonarCloud permettent de traiter de manière préventive des vulnérabilités secondaires (CSRF, SRI), des failles d'accessibilité (WCAG) ainsi que des défauts de maintenabilité, garantissant ainsi un code web propre, accessible et sécurisé.
+
+\end{document}
