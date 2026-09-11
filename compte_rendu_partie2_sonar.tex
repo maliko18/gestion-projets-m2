@@ -183,14 +183,122 @@ Conventions Python & Faible (Low) & \texttt{app.py} & Nommage de variables local
 \textbf{Explication :} En Python (norme PEP 8), les variables locales doivent être nommées en \texttt{snake\_case} (\texttt{nom\_proj}) et non en \texttt{camelCase} (\texttt{nomProj}).
 
 % --------------------------------------------------
-\section{Synthèse des Recommandations}
+\section{Solutions et Plan de Remédiation Détaillé}
 % --------------------------------------------------
-À la suite de cette analyse statique par SonarCloud, les actions prioritaires de refactorisation sont les suivantes :
-\begin{enumerate}
-    \item **Priorité Haute (Sécurité) :** Mettre en place un jeton de protection CSRF sur la route d'ajout d'affectation POST.
-    \item **Priorité Moyenne (Accessibilité) :** Ajouter les identifiants \texttt{id} et liaisons \texttt{for} sur tous les éléments de formulaire de \texttt{nouveau.html}.
-    \item **Priorité Moyenne (Bonnes Pratiques) :** Remplacer le nommage des variables \texttt{camelCase} par la convention \texttt{snake\_case} conformément au guide PEP 8.
-\end{enumerate}
+Cette section présente le plan de remédiation complet avec le code source corrigé pour chacune des vulnérabilités, failles d'accessibilité et code smells relevés par SonarCloud.
+
+\subsection{1. Protection contre les attaques CSRF (Sécurité - Sévérité Élevée)}
+\textbf{Problème :} L'application traite des formulaires soumis via la méthode HTTP POST sans validation de jetons d'authenticité anti-CSRF.
+
+\textbf{Code Corrigé (\texttt{app.py}) :}
+\begin{lstlisting}[language=Python, caption=Mise en place de Flask-WTF / CSRFProtect]
+from flask import Flask
+from flask_wtf.csrf import CSRFProtect
+
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+# Activation globale de la protection CSRF
+csrf = CSRFProtect(app)
+\end{lstlisting}
+
+\textbf{Dans le formulaire HTML (\texttt{templates/nouveau.html}) :}
+\begin{lstlisting}[language=HTML, caption=Ajout du champ token CSRF caché]
+<form method="POST" action="{{ url_for('nouvelle_affectation') }}">
+    <!-- Token CSRF dynamique généré par Flask-WTF -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    ...
+</form>
+\end{lstlisting}
+
+\subsection{2. Élimination des identifiants en dur (Security Hotspot)}
+\textbf{Problème :} L'utilisation de valeurs de mots de passe par défaut dans la fonction de connexion risque d'exposer des identifiants de production en cas de fuite du code source.
+
+\textbf{Code Corrigé (\texttt{database.py}) :}
+\begin{lstlisting}[language=Python, caption=Suppression des identifiants par défaut]
+# Lève une exception explicite si les variables d'environnement ne sont pas définies
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "gestion_projets")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD") # Aucune valeur par défaut en dur !
+\end{lstlisting}
+
+\subsection{3. Désactivation du Mode Debug en Production (Sécurité - Sévérité Faible)}
+\textbf{Problème :} L'instruction \texttt{app.run(debug=True)} expose le shell d'exécution interactif en cas d'erreur.
+
+\textbf{Code Corrigé (\texttt{app.py}) :}
+\begin{lstlisting}[language=Python, caption=Contrôle du mode debug via variable d'environnement]
+if __name__ == "__main__":
+    # Désactivé par défaut en production
+    is_debug = os.getenv("FLASK_DEBUG", "false").lower() in ("true", "1")
+    app.run(debug=is_debug, host="127.0.0.1", port=5000)
+\end{lstlisting}
+
+\subsection{4. Intégrité des Ressources CDN (Subresource Integrity - SRI)}
+\textbf{Problème :} L'importation de Bootstrap via un CDN externe sans validation d'empreinte numérique permettrait l'exécution de scripts malveillants si le serveur CDN était altéré.
+
+\textbf{Code Corrigé (\texttt{templates/layout.html}) :}
+\begin{lstlisting}[language=HTML, caption=Ajout des attributs integrity et crossorigin]
+<!-- Feuille de style CSS avec contrôle d'intégrité -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
+      rel="stylesheet" 
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" 
+      crossorigin="anonymous">
+
+<!-- Script JS avec contrôle d'intégrité -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" 
+        crossorigin="anonymous"></script>
+\end{lstlisting}
+
+\subsection{5. Correction des Formulaires d'Accessibilité Web (WCAG 2.0 / a11y)}
+\textbf{Problème :} Les étiquettes \texttt{<label>} ne sont pas reliées aux champs de saisie \texttt{<input>}, empêchant la lecture par les technologies d'assistance pour personnes malvoyantes.
+
+\textbf{Code Corrigé (\texttt{templates/nouveau.html}) :}
+\begin{lstlisting}[language=HTML, caption=Association explicite for / id conforme WCAG 2.0]
+<div class="col-md-6">
+    <label for="nomProj" class="form-label fw-semibold">Nom du Projet *</label>
+    <input type="text" id="nomProj" class="form-control" name="nomProj" placeholder="ex: ILO" required>
+</div>
+<div class="col-md-6">
+    <label for="mgrProj" class="form-label fw-semibold">Manager du Projet *</label>
+    <input type="text" id="mgrProj" class="form-control" name="mgrProj" placeholder="ex: Dupont" required>
+</div>
+<div class="col-md-4">
+    <label for="idEmp" class="form-label fw-semibold">ID Employé *</label>
+    <input type="text" id="idEmp" class="form-control" name="idEmp" placeholder="ex: E101" required>
+</div>
+\end{lstlisting}
+
+\subsection{6. Explicitation des Méthodes HTTP sur les Routes Flask}
+\textbf{Problème :} Omettre le paramètre \texttt{methods} nuit à la lisibilité et au principe de moindre privilège.
+
+\textbf{Code Corrigé (\texttt{app.py}) :}
+\begin{lstlisting}[language=Python, caption=Spécification explicite des verbes HTTP]
+@app.route("/", methods=["GET"])
+def index():
+    ...
+
+@app.route("/projet/<string:nom_proj>", methods=["GET"])
+def projet_detail(nom_proj):
+    ...
+\end{lstlisting}
+
+\subsection{7. Conformité aux Conventions de Nommage Python (PEP 8)}
+\textbf{Problème :} L'utilisation du style \texttt{camelCase} pour les variables locales enfreint le standard PEP 8 recommandé par SonarCloud (\texttt{snake\_case}).
+
+\textbf{Code Corrigé (\texttt{app.py}) :}
+\begin{lstlisting}[language=Python, caption=Refactorisation du nommage des variables en snake_case]
+# Avant : nomProj, mgrProj, idEmp, nomEmp, salEmp, evalEmp
+# Après (PEP 8) :
+nom_proj = request.form.get("nomProj", "").strip()
+mgr_proj = request.form.get("mgrProj", "").strip()
+id_emp = request.form.get("idEmp", "").strip()
+nom_emp = request.form.get("nomEmp", "").strip()
+sal_emp = float(request.form.get("salEmp", 0))
+eval_emp = int(eval_emp_raw) if eval_emp_raw else None
+\end{lstlisting}
 
 % --------------------------------------------------
 \section{Conclusion}
