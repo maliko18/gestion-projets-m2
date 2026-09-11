@@ -62,7 +62,7 @@
     
     \rule{\linewidth}{0.5mm}\\[0.5cm]
     {\huge \bfseries COMPTE RENDU DE TP -- PARTIE 2}\\[0.3cm]
-    {\Large \textbf{Analyse Statique du Code avec SonarCloud / SonarQube}}\\[0.5cm]
+    {\Large \textbf{Analyse Statique du Code : SonarCloud \& IA Gemini}}\\[0.5cm]
     \rule{\linewidth}{0.5mm}\\[3cm]
     
     \begin{minipage}{0.45\textwidth}
@@ -299,6 +299,71 @@ nom_emp = request.form.get("nomEmp", "").strip()
 sal_emp = float(request.form.get("salEmp", 0))
 eval_emp = int(eval_emp_raw) if eval_emp_raw else None
 \end{lstlisting}
+
+% --------------------------------------------------
+\section{Analyse Complémentaire par l'Intelligence Artificielle (Gemini 3.6 Flash)}
+% --------------------------------------------------
+En complément de l'analyse statique automatisée effectuée par SonarCloud, une révision de code approfondie a été réalisée par l'Agent d’Intelligence Artificielle **Gemini 3.6 Flash** (GitHub Copilot).
+
+L'objectif de cette double approche est de comparer l'analyse SAST traditionnelle basée sur des règles déterministes (Sonar) avec une analyse sémantique guidée par un modèle de langage (IA LLM).
+
+\subsection{Problèmes Critiques et Avancés Identifiés par l'IA Gemini}
+
+Alors que SonarCloud se concentre principalement sur les erreurs de syntaxe, d'accessibilité et de configuration, l'analyse par l'IA Gemini a permis de révéler des risques d'architecture, de logique métier et de sécurité des données plus subtils :
+
+\subsubsection{1. Absence de Gestion Transactionnelle lors des Opérations Multi-Requêtes}
+\textbf{Analyse Gemini :} Dans \texttt{init_db.py} et \texttt{app.py}, en cas d'échec lors d'une insertion intermédiaire ou d'une erreur d'unicité (\texttt{UNIQUE constraint failed}), l'absence de bloc d'exception avec \texttt{conn.rollback()} explicite peut laisser la base de données SQLite ou PostgreSQL dans un état incohérent ou verrouillé.
+
+\textbf{Correction proposée par l'IA :}
+\begin{lstlisting}[language=Python, caption=Gestion robuste des transactions avec try/except/rollback]
+try:
+    cursor.execute(insert_sql, (nom_proj, mgr_proj, ...))
+    conn.commit()
+except Exception as err:
+    conn.rollback() # Annulation propre de la transaction
+    flash(f"Erreur d'insertion en base de donnees : {err}", "danger")
+finally:
+    cursor.close()
+    conn.close()
+\end{lstlisting}
+
+\subsubsection{2. Exposition de Données Sensibles (Salaires et Évaluations)}
+\textbf{Analyse Gemini :} Sur la vue générale (\texttt{index.html}), la colonne \texttt{salEmp} (salaire annuel de l'employé) et \texttt{evalEmp} (évaluation individuelle) sont affichées publiquement à tous les utilisateurs. D'un point de vue de la confidentialité des données (RGPD / Politique RH), ces attributs ne devraient être visibles que par le manager du département ou l'employé concerné.
+
+\textbf{Recommandation de l'IA :} Masquer ou restreindre l'affichage des colonnes sensibles selon le rôle de l'utilisateur authentifié.
+
+\subsubsection{3. Échappement des Métacaractères LIKE (\% et \_)}
+\textbf{Analyse Gemini :} Même en utilisant des requêtes paramétrées (\texttt{WHERE nomProj LIKE ?}), si l'utilisateur recherche un symbole littéral \texttt{\%} ou \texttt{\_}, le SGBD les interprète comme des jokers SQL. Un utilisateur peut ainsi lister l'ensemble des enregistrements en saisissant simplement le caractère \texttt{\%}.
+
+\textbf{Correction proposée par l'IA :}
+\begin{lstlisting}[language=Python, caption=Neutralisation des métacaractères LIKE par l'IA]
+def escape_like(text):
+    # Echappe les caracteres speciaux du prédicat LIKE
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+search_term = f"%{escape_like(query_search)}%"
+\end{lstlisting}
+
+\subsubsection{4. Validation de Type et Assainissement des Entrées (Input Sanitization)}
+\textbf{Analyse Gemini :} Les valeurs saisies dans le formulaire (comme le budget, le salaire ou les heures) sont converties directement sans validation préalable de plage de valeurs (ex: budget négatif ou nombre d'heures > 168h/semaine).
+
+\subsection{Comparatif : SonarCloud vs Analyse par l'IA (Gemini)}
+
+\begin{table}[htbp]
+\centering
+\caption{Tableau comparatif entre l'analyse SAST (Sonar) et l'analyse IA (Gemini)}
+\vspace{0.2cm}
+\small
+\begin{tabular}{|p{3.5cm}|p{5.5cm}|p{5.5cm}|}
+\hline
+\textbf{Critère} & \textbf{SonarCloud (SAST Traditionnel)} & \textbf{Intelligence Artificielle (Gemini)} \\ \hline
+\textbf{Analyse de la syntaxe & style} & Excellent (Règles d'accessibilité WCAG, nommage PEP 8). & Bon (Rappels de conventions). \\ \hline
+\textbf{Détection des failles connues} & Très rapide sur les motifs fixes (CSRF, mots de passe en dur). & Identifie les failles logiques métier et de contexte. \\ \hline
+\textbf{Logique métier & RGPD} & Limité (Ne comprend pas la sensibilité des salaires). & **Excellent** (Comprend la confidentialité RH et l'exposition des données). \\ \hline
+\textbf{Gestion d'erreurs & Transactions} & Signale le mode debug. & **Détecte les fuites mémoire et l'absence de rollback**. \\ \hline
+\textbf{Procuration de solutions} & Liens vers la documentation générique. & **Génère directement le code refactorisé prêt à l'emploi**. \\ \hline
+\end{tabular}
+\end{table}
 
 % --------------------------------------------------
 \section{Conclusion}
